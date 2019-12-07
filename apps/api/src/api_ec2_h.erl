@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 07. Dec 2019 1:42 PM
 %%%-------------------------------------------------------------------
--module(api_ec2_describe_instances_h).
+-module(api_ec2_h).
 -author("aaron lelevier").
 -include_lib("core/src/macros.hrl").
 
@@ -25,9 +25,15 @@ content_types_provided(Req, State) ->
   ], Req, State}.
 
 json_get(Req, State) ->
-  QResult = db_server:select({ec2, describe_instances}),
+  Action = decode_action(Req),
+  QResult = db_server:select({ec2, Action}),
   ?DEBUG(QResult),
   Body = jsx:encode(QResult),
   {Body, Req, State}.
 
-
+decode_action(Req) ->
+  Bin0 = cowboy_req:binding(action, Req),
+  Str = binary_to_list(Bin0),
+  Action = list_to_atom(string:join(string:replace(Str, "-", "_"), "")),
+  ?DEBUG(Action),
+  Action.
