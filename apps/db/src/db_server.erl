@@ -8,36 +8,49 @@
 
 -behaviour(gen_server).
 
+-include_lib("core/src/macros.hrl").
+
 -export([start_link/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
-  code_change/3]).
-
-%% Debugging
--compile(export_all).
+  code_change/3, select/1, ping/0]).
 
 %% Macros
 -define(SERVER, ?MODULE).
 -define(PG_TABLE, "djangoaws").
-%% compile cmd: c(db_server, {d, debug_flag}).
--ifdef(ldebug_flag).
--define(DEBUG(X), io:format("DEBUG ~p:~p ~p~n",[?MODULE, ?LINE, X])).
--else.
--define(DEBUG(X), void).
--endif.
 
 %% Records
 -record(db_server_state, {}).
+
+%%%===================================================================
+%%% Public
+%%%===================================================================
+
+%% @doc gen_server:call to query DB
+%% ex: select({ec2, describe_instances}).
+-spec select(Thing::{AwsService::string(), Action::string()}) -> [tuple()].
+select(Thing) ->
+  ?DEBUG({pid, self()}),
+  gen_server:call(?MODULE, {select, Thing}).
+
+%% @doc services as end-to-end test from gen_server to DB
+-spec ping() -> [tuple()].
+ping() ->
+  select({ec2, describe_instances}).
 
 %%%===================================================================
 %%% Spawning and gen_server implementation
 %%%===================================================================
 
 start_link() ->
+  ?DEBUG(start_link),
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 init([]) ->
   {ok, #db_server_state{}}.
 
+handle_call({select, QCommand}, _From, State) ->
+  ?DEBUG({pid, self()}),
+  {reply, select0(QCommand), State};
 handle_call(_Request, _From, State = #db_server_state{}) ->
   {reply, ok, State}.
 
@@ -57,8 +70,8 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
--spec select({Service::atom(), Action::atom}) -> [tuple()].
-select({Service, Action}) ->
+-spec select0({Service::atom(), Action::atom}) -> [tuple()].
+select0({Service, Action}) ->
   % ex: {select, instance}
   {CrudMethod, ResourceType} = crud_method_and_resource_type(Action),
   Qs = CrudMethod ++ " * from " ++ atom_to_list(Service) ++ "_" ++ ResourceType,

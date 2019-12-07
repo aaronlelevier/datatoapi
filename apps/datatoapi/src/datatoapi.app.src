@@ -5,7 +5,8 @@
   {mod, {datatoapi_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    db
    ]},
   {env,[]},
   {modules, []},
