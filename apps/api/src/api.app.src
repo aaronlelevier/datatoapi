@@ -1,13 +1,17 @@
-{application, datatoapi,
+{application, api,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
-  {mod, {datatoapi_app, []}},
+  {mod, {api_app, []}},
   {applications,
    [kernel,
     stdlib,
+    % 3rd party
+    cowboy,
+    jsx,
     % my apps
-    api
+    core,
+    db
    ]},
   {env,[]},
   {modules, []},
