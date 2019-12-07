@@ -1,0 +1,10 @@
+{"1.1.0",
+[{<<"epgsql">>,{pkg,<<"epgsql">>,<<"4.3.0">>},0},
+ {<<"jsx">>,
+  {git,"https://github.com/talentdeficit/jsx.git",
+       {ref,"45ffea21a6863c58fb7da1f937e868916ff68b27"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"epgsql">>, <<"26D9CF04D74773D1DC4DA24AD39E926B34E107232591FE1866EFDFBC0A098396">>}]}
+].
