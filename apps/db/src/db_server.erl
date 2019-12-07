@@ -25,9 +25,10 @@
 %%% Public
 %%%===================================================================
 
-%% @doc gen_server:call to query DB
-%% ex: select({ec2, describe_instances}).
--spec select(Thing::{AwsService::string(), Action::string()}) -> [tuple()].
+%% @doc gen_server:call to query DB - that returns a list of DB records
+%% where each item in the list represents a DB Row and is of type `map`
+%% invoke ex: select({ec2, describe_instances}).
+-spec select(Thing::{AwsService::string(), Action::string()}) -> [map()].
 select(Thing) ->
   ?DEBUG({pid, self()}),
   gen_server:call(?MODULE, {select, Thing}).
@@ -72,10 +73,10 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 
 -spec select0({Service::atom(), Action::atom}) -> [tuple()].
 select0({Service, Action}) ->
-  % ex: {select, instance}
+  % ex: {"select", "instances"}
   {CrudMethod, ResourceType} = crud_method_and_resource_type(Action),
+  % ex: "select * from ec2_instance"
   Qs = CrudMethod ++ " * from " ++ atom_to_list(Service) ++ "_" ++ ResourceType,
-  ?DEBUG(Qs),
   query_to_list(Qs).
 
 %% @doc does a SQL query using a QueryString (Qs) and returns as list
@@ -111,12 +112,12 @@ convert_jsonb(L) ->
   convert_jsonb(L, []).
 
 -spec convert_jsonb(list(), Acc::list()) -> list().
-convert_jsonb([], Acc) -> lists:reverse(Acc);
+convert_jsonb([], Acc) -> maps:from_list(lists:reverse(Acc));
 convert_jsonb([H|T], Acc) ->
   {ColName, ColType, Value} = H,
   Value2 = case ColType of
              jsonb ->
-               jsx:decode(Value);
+               maps:from_list(jsx:decode(Value));
              _ ->
                Value
            end,
@@ -136,7 +137,7 @@ crud_method_and_resource_type(Action) ->
   #{Key := CrudMethod} = #{describe => "select"},
   {CrudMethod, ResourceType}.
 
-%% @doc ex: splits the Action `describe_instances` into `{"describe", "instance"
+%% @doc splits the Action, for ex: `describe_instances` into `{"describe", "instance"}`
 -spec split_action(Action::atom()) -> {Method::string(), ResourceType::string()}.
 split_action(Action) ->
   S = atom_to_list(Action),
