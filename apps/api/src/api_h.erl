@@ -25,17 +25,16 @@ content_types_provided(Req, State) ->
   ], Req, State}.
 
 json_get(Req, State) ->
-  Service = decode_url_seg(Req, service),
-  Action = decode_url_seg(Req, action),
-  QResult = db_server:select({Service, Action}),
+  Table = extract_url_segment(Req, table),
+  QResult = db_server:select(Table),
   ?DEBUG(QResult),
   Body = jsx:encode(QResult),
   {Body, Req, State}.
 
--spec decode_url_seg(Req::map(), Segment::atom()) -> atom().
-decode_url_seg(Req, Segment) ->
-  Bin0 = cowboy_req:binding(Segment, Req),
-  Str = binary_to_list(Bin0),
-  Action = list_to_atom(string:join(string:replace(Str, "-", "_"), "")),
+%% @doc extracts a URL segment by name and returns it as an atom
+-spec extract_url_segment(Req::map(), Segment::atom()) -> atom().
+extract_url_segment(Req, Name) ->
+  Bin = cowboy_req:binding(Name, Req),
+  Action = binary_to_atom(Bin, utf8),
   ?DEBUG(Action),
   Action.

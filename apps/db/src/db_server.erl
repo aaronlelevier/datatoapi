@@ -25,13 +25,11 @@
 %%% Public
 %%%===================================================================
 
-%% @doc gen_server:call to query DB - that returns a list of DB records
-%% where each item in the list represents a DB Row and is of type `map`
-%% invoke ex: select({ec2, describe_instances}).
+%% @doc synchronous perform SELECT query
 -spec select(Thing::{AwsService::string(), Action::string()}) -> [map()].
-select(Thing) ->
+select(Table) ->
   ?DEBUG({pid, self()}),
-  gen_server:call(?MODULE, {select, Thing}).
+  gen_server:call(?MODULE, {select, Table}).
 
 %% @doc services as end-to-end test from gen_server to DB
 -spec ping() -> [tuple()].
@@ -71,12 +69,10 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 
+%% @doc perform SELECT query
 -spec select0({Service::atom(), Action::atom}) -> [tuple()].
-select0({Service, Action}) ->
-  % ex: {"select", "instances"}
-  {CrudMethod, ResourceType} = crud_method_and_resource_type(Action),
-  % ex: "select * from ec2_instance"
-  Qs = CrudMethod ++ " * from " ++ atom_to_list(Service) ++ "_" ++ ResourceType,
+select0(Table) ->
+  Qs = "select * from " ++ atom_to_list(Table),
   query_to_list(Qs).
 
 %% @doc does a SQL query using a QueryString (Qs) and returns as list
@@ -84,6 +80,7 @@ select0({Service, Action}) ->
 query_to_list(Qs) ->
   to_list(query(Qs)).
 
+%% @doc connect to DB
 -spec connect() -> pid().
 connect() ->
   epgsql:connect("localhost", "postgres", "postgres", #{
@@ -122,24 +119,3 @@ convert_jsonb([H|T], Acc) ->
                Value
            end,
   convert_jsonb(T, [{ColName, Value2}|Acc]).
-
--spec crud_method_and_resource_type(Action::atom()) -> {
-  CrudMethod::string(), % ex: "select"
-  ResourceType::string() % ex: "ec2"
-}.
-crud_method_and_resource_type(Action) ->
-  {Method, ResourceType0} = split_action(Action),
-  ?DEBUG({Method, ResourceType0}),
-
-  ResourceType = core_util:singularize(ResourceType0),
-
-  Key = list_to_atom(Method),
-  #{Key := CrudMethod} = #{describe => "select"},
-  {CrudMethod, ResourceType}.
-
-%% @doc splits the Action, for ex: `describe_instances` into `{"describe", "instance"}`
--spec split_action(Action::atom()) -> {Method::string(), ResourceType::string()}.
-split_action(Action) ->
-  S = atom_to_list(Action),
-  L = string:split(S, "_"),
-  list_to_tuple(L).

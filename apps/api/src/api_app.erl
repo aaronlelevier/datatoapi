@@ -13,7 +13,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
             {"/", toppage_h, []},
-            {"/[:service]/[:action]", api_h, []}
+            {"/[:table]", api_h, []}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(http, [{port, 8080}], #{
