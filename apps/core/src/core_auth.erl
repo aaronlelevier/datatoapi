@@ -9,8 +9,7 @@
 %%%-------------------------------------------------------------------
 -module(core_auth).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([header/0, payload/1, base64_encode/1]).
 
 -spec header() -> map().
 header() ->

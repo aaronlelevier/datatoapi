@@ -8,8 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(trip_util).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([now_datetime/0]).
 
 now_datetime() ->
   Now = erlang:timestamp(),

@@ -8,8 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(ex_monitor).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([on_exit/2, list_to_atom_fun/0, on_exit_fun/1,
+  monitor_example_usage/0]).
 -include_lib("core/src/macros.hrl").
 
 on_exit(Pid, Fun) ->
@@ -42,14 +42,9 @@ monitor_example_usage() ->
   ?DEBUG({self, self()}),
   ?DEBUG({pid, Pid}),
   % create an "on exit handler"
-  Pid2 = on_exit(Pid, on_exit_fun(Pid)),
-  ?DEBUG({pid2, Pid2}),
+  _Pid2 = on_exit(Pid, on_exit_fun(Pid)),
+
+  ?DEBUG({pid2, _Pid2}),
   % send message that will trigger "Pid" to die and "Pid2"
   % the "on exit handler" pid should be informed
   Pid ! hello.
-
-
-
-
-
-

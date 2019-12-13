@@ -8,8 +8,8 @@
 %%%-------------------------------------------------------------------
 -module(ex_link).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([atom_to_list_fun/0, start_no_links/0, start_links/0,
+  link_example_usage/0, link_example_usage_2/0]).
 -include_lib("core/src/macros.hrl").
 
 atom_to_list_fun() ->

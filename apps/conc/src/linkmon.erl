@@ -8,8 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(linkmon).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([myproc/0, myproc_a/0, loop/1, chain/1]).
 -include_lib("core/src/macros.hrl").
 
 -define(TIMEOUT, 1000).
@@ -26,7 +25,8 @@ myproc_a() ->
 loop(Pid) ->
   receive
     Msg ->
-      ?DEBUG({msg, Msg})
+      ?DEBUG({msg, Msg}),
+      Msg
   end,
   loop(Pid).
 

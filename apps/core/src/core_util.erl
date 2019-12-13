@@ -8,8 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(core_util).
 -author("aaron lelevier").
--compile(export_all).
--export([]).
+-export([singularize/1]).
 
 %% @doc changes a plural to singular - currently by only stripping the "s"
 -spec singularize(S::string()) -> string().
