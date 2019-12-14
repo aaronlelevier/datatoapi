@@ -3,7 +3,7 @@
 ## create
 
 ```sql
-create table "user" (id serial primary key, username varchar(100) not null);
+create table auth_user (id serial primary key, username varchar(100) not null);
 ```
 
 
@@ -11,7 +11,7 @@ create table "user" (id serial primary key, username varchar(100) not null);
 ## insert
 
 ```sql
-insert into "user" (username) values ('aaron');
+insert into auth_user (username) values ('aaron');
 ```
 
 
@@ -19,6 +19,6 @@ insert into "user" (username) values ('aaron');
 ## select
 
 ```sql
-select * from "user" where id = 1;
+select * from auth_user where id = 1;
 ```
 

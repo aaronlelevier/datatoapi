@@ -1,12 +1,12 @@
 %%%-------------------------------------------------------------------
 %%% @author aaron lelevier
 %%% @copyright (C) 2019, <COMPANY>
-%%% @doc API endpoint for Service and Action, which are URL segments
+%%% @doc
 %%%
 %%% @end
-%%% Created : 07. Dec 2019 1:42 PM
+%%% Created : 14. Dec 2019 6:37 AM
 %%%-------------------------------------------------------------------
--module(api_h).
+-module(user_get_h).
 -author("aaron lelevier").
 -include_lib("core/src/macros.hrl").
 
@@ -25,9 +25,8 @@ content_types_provided(Req, State) ->
   ], Req, State}.
 
 json_get(Req, State) ->
-  Table = api_util:extract_url_segment(Req, table),
-  QResult = db_server:select(Table),
+  UserId = api_util:extract_url_segment(Req, user_id),
+  QResult = db_server:select_where({user, id, UserId}),
   ?DEBUG(QResult),
   Body = jsx:encode(QResult),
   {Body, Req, State}.
-

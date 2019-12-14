@@ -11,12 +11,15 @@
 -include_lib("core/src/macros.hrl").
 
 -export([start_link/0]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
-  code_change/3, select/1, ping/0]).
+-export([
+  init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3,
+  ping/0, select/1, select_where/1]).
+
+-compile(export_all).
 
 %% Macros
 -define(SERVER, ?MODULE).
--define(PG_TABLE, "djangoaws").
+-define(PG_TABLE, "mtb").
 
 %% Records
 -record(db_server_state, {}).
@@ -26,10 +29,16 @@
 %%%===================================================================
 
 %% @doc synchronous perform SELECT query
--spec select(Thing::{AwsService::string(), Action::string()}) -> [map()].
+-spec select(Table::atom()) -> [map()].
 select(Table) ->
   ?DEBUG({pid, self()}),
   gen_server:call(?MODULE, {select, Table}).
+
+%% @doc synchronous perform SELECT query
+-spec select_where({Table::atom(), Key::atom(), Value::atom()}) -> [map()].
+select_where({Table, Key, Value}) ->
+  ?DEBUG({pid, self()}),
+  gen_server:call(?MODULE, {select_where, {Table, Key, Value}}).
 
 %% @doc services as end-to-end test from gen_server to DB
 -spec ping() -> [tuple()].
@@ -50,6 +59,9 @@ init([]) ->
 handle_call({select, QCommand}, _From, State) ->
   ?DEBUG({pid, self()}),
   {reply, select0(QCommand), State};
+handle_call({select_where, QCommand}, _From, State) ->
+  ?DEBUG({pid, self()}),
+  {reply, select_where0(QCommand), State};
 handle_call(_Request, _From, State = #db_server_state{}) ->
   {reply, ok, State}.
 
@@ -70,10 +82,25 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 %%%===================================================================
 
 %% @doc perform SELECT query
--spec select0({Service::atom(), Action::atom}) -> [tuple()].
+-spec select0({Table::atom()}) -> [tuple()].
 select0(Table) ->
   Qs = "select * from " ++ atom_to_list(Table),
   query_to_list(Qs).
+
+%% @doc perform SELECT query
+-spec select_where0({Table::atom(), Key::atom(), Value::atom()}) -> [tuple()].
+select_where0({Table, Key, Value}) ->
+  TableName = trans_table_name(Table),
+  Qs = "select *"
+    " from " ++ atom_to_list(TableName) ++
+    " where " ++ atom_to_list(Key) ++ " = " ++ atom_to_list(Value),
+  ?DEBUG(Qs),
+  query_to_list(Qs).
+
+trans_table_name(Name) ->
+  TableNameMap = #{user => auth_user},
+  #{Name := TableName} = TableNameMap,
+  TableName.
 
 %% @doc does a SQL query using a QueryString (Qs) and returns as list
 -spec query_to_list(Qs::string()) -> [tuple()].
@@ -100,9 +127,15 @@ query(Qs) ->
 to_list(QResult) ->
   {ok, ColInfo, Rows} = QResult,
   ColNames = [ColName || {column, ColName, _ColType, _, _, _, _} <- ColInfo],
+  ?DEBUG(ColNames),
   ColTypes = [ColType || {column, _ColName, ColType, _, _, _, _} <- ColInfo],
   L = [lists:zip3(ColNames, ColTypes, tuple_to_list(R)) || R <- Rows],
-  [convert_jsonb(X) || X <- L].
+
+  ?DEBUG(L),
+  % excludes - HACK so password isn't returned in response
+  L2 = [[X || X <- Y, element(1, X) =/= <<"password">>] || Y <- L],
+
+  [convert_jsonb(X) || X <- L2].
 
 -spec convert_jsonb(L::list()) -> list().
 convert_jsonb(L) ->
