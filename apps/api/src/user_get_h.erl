@@ -26,7 +26,7 @@ content_types_provided(Req, State) ->
 
 json_get(Req, State) ->
   UserId = api_util:extract_url_segment(Req, user_id),
-  QResult = db_server:select_where({user, id, UserId}),
+  QResult = db_server:select_get({user, id, UserId}),
   ?DEBUG(QResult),
   Body = jsx:encode(QResult),
   {Body, Req, State}.

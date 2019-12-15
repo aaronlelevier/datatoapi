@@ -29,16 +29,33 @@
 %%%===================================================================
 
 %% @doc synchronous perform SELECT query
--spec select(Table::atom()) -> [map()].
+-spec select(Table :: atom()) -> [map()].
 select(Table) ->
   ?DEBUG({pid, self()}),
-  gen_server:call(?MODULE, {select, Table}).
+  L = gen_server:call(?MODULE, {select, Table}),
+  convert_nested_jsonb(L).
 
+%% TODO: not in use - should be used w/ query params
 %% @doc synchronous perform SELECT query
--spec select_where({Table::atom(), Key::atom(), Value::atom()}) -> [map()].
+-spec select_where({Table :: atom(), Key :: atom(), Value :: atom()}) -> [map()].
 select_where({Table, Key, Value}) ->
   ?DEBUG({pid, self()}),
-  gen_server:call(?MODULE, {select_where, {Table, Key, Value}}).
+  L = gen_server:call(?MODULE, {select_where, {Table, Key, Value}}),
+  convert_nested_jsonb(L).
+
+%% @doc synchronous perform SELECT query and returns single record only
+-spec select_get({Table :: atom(), Key :: atom(), Value :: atom()}) -> map().
+select_get({Table, Key, Value}) ->
+  L = select_where({Table, Key, Value}),
+  case length(L) of
+    0 ->
+      #{};
+    1 ->
+      [H | _] = L,
+      H;
+    _ ->
+      #{error => <<"multiple records returned">>}
+  end.
 
 %% @doc services as end-to-end test from gen_server to DB
 -spec ping() -> [tuple()].
@@ -82,17 +99,17 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 %%%===================================================================
 
 %% @doc perform SELECT query
--spec select0({Table::atom()}) -> [tuple()].
+-spec select0({Table :: atom()}) -> [tuple()].
 select0(Table) ->
   Qs = "select * from " ++ atom_to_list(Table),
   query_to_list(Qs).
 
 %% @doc perform SELECT query
--spec select_where0({Table::atom(), Key::atom(), Value::atom()}) -> [tuple()].
+-spec select_where0({Table :: atom(), Key :: atom(), Value :: atom()}) -> [tuple()].
 select_where0({Table, Key, Value}) ->
   TableName = trans_table_name(Table),
   Qs = "select *"
-    " from " ++ atom_to_list(TableName) ++
+  " from " ++ atom_to_list(TableName) ++
     " where " ++ atom_to_list(Key) ++ " = " ++ atom_to_list(Value),
   ?DEBUG(Qs),
   query_to_list(Qs).
@@ -103,7 +120,7 @@ trans_table_name(Name) ->
   TableName.
 
 %% @doc does a SQL query using a QueryString (Qs) and returns as list
--spec query_to_list(Qs::string()) -> [tuple()].
+-spec query_to_list(Qs :: string()) -> [tuple()].
 query_to_list(Qs) ->
   to_list(query(Qs)).
 
@@ -116,14 +133,14 @@ connect() ->
   }).
 
 %% @doc performs a query using a SQL string
--spec query(Qs::string()) -> epgsql_cmd_squery:response().
+-spec query(Qs :: string()) -> epgsql_cmd_squery:response().
 query(Qs) ->
   {ok, C} = connect(),
   epgsql:squery(C, Qs).
 
 %% @doc converts the QResult (query result) to a list of 2 item tuples,
 %% that can then be converted to JSON using `jsx`
--spec to_list(QResult:: tuple()) -> list().
+-spec to_list(QResult :: tuple()) -> list().
 to_list(QResult) ->
   {ok, ColInfo, Rows} = QResult,
   ColNames = [ColName || {column, ColName, _ColType, _, _, _, _} <- ColInfo],
@@ -133,17 +150,20 @@ to_list(QResult) ->
 
   ?DEBUG(L),
   % excludes - HACK so password isn't returned in response
-  L2 = [[X || X <- Y, element(1, X) =/= <<"password">>] || Y <- L],
+  [[X || X <- Y, element(1, X) =/= <<"password">>] || Y <- L].
 
-  [convert_jsonb(X) || X <- L2].
+%% @doc converts a 2d list to JSON
+-spec convert_nested_jsonb(NestedList :: [[map()]]) -> [[binary()]].
+convert_nested_jsonb(NestedList) ->
+  [convert_jsonb(X) || X <- NestedList].
 
--spec convert_jsonb(L::list()) -> list().
+-spec convert_jsonb(L :: [map()]) -> [binary()].
 convert_jsonb(L) ->
   convert_jsonb(L, []).
 
--spec convert_jsonb(list(), Acc::list()) -> list().
+-spec convert_jsonb(list(), Acc :: list()) -> list().
 convert_jsonb([], Acc) -> maps:from_list(lists:reverse(Acc));
-convert_jsonb([H|T], Acc) ->
+convert_jsonb([H | T], Acc) ->
   {ColName, ColType, Value} = H,
   Value2 = case ColType of
              jsonb ->
@@ -151,4 +171,4 @@ convert_jsonb([H|T], Acc) ->
              _ ->
                Value
            end,
-  convert_jsonb(T, [{ColName, Value2}|Acc]).
+  convert_jsonb(T, [{ColName, Value2} | Acc]).
