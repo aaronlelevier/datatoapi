@@ -111,7 +111,8 @@ select_where0({Table, Key, Value}) ->
   TableName = trans_table_name(Table),
   Qs = "select *"
   " from " ++ atom_to_list(TableName) ++
-    " where " ++ atom_to_list(Key) ++ " = " ++ atom_to_list(Value),
+    " where " ++ atom_to_list(Key) ++ " = " ++
+    "'" ++ atom_to_list(Value) ++ "'",
   ?DEBUG(Qs),
   query_to_list(Qs).
 
