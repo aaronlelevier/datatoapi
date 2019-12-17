@@ -101,7 +101,8 @@ code_change(_OldVsn, State = #db_server_state{}, _Extra) ->
 %% @doc perform SELECT query
 -spec select0({Table :: atom()}) -> [tuple()].
 select0(Table) ->
-  Qs = "select * from " ++ atom_to_list(Table),
+  TableName = trans_table_name(Table),
+  Qs = "select * from " ++ atom_to_list(TableName),
   query_to_list(Qs).
 
 %% @doc perform SELECT query
