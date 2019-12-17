@@ -13,7 +13,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
             {"/", toppage_h, []},
-            {"/user/[:user_id]", user_get_h, []},
+            {"/user/[:user_id]", user_h, []},
             {"/table/[:table]", api_h, []}
             ]}
     ]),

@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 14. Dec 2019 6:37 AM
 %%%-------------------------------------------------------------------
--module(user_get_h).
+-module(user_h).
 -author("aaron lelevier").
 -include_lib("core/src/macros.hrl").
 
