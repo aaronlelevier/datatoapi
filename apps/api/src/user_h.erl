@@ -43,7 +43,5 @@ json_get(Req, State) ->
                     db_server:select_where({user, Key2, Value2})
                 end
             end,
-
-  ?DEBUG(QResult),
   Body = jsx:encode(QResult),
   {Body, Req, State}.
