@@ -14,19 +14,7 @@ end_per_suite(_Config) ->
   ok = application:stop(api).
 
 all() ->
-  all(?MODULE).
-
-all(Suite) ->
-  lists:usort([F || {F, 1} <- Suite:module_info(exports),
-    F =/= module_info,
-    F =/= test, %% This is leftover from the eunit parse_transform...
-    F =/= all,
-    F =/= groups,
-    string:substr(atom_to_list(F), 1, 5) =/= "init_",
-    string:substr(atom_to_list(F), 1, 4) =/= "end_",
-    string:substr(atom_to_list(F), 1, 3) =/= "do_"
-  ]).
-
+  ct_helper:all(?MODULE).
 
 %% tests --------------------------------------------------------------------
 
