@@ -3,6 +3,8 @@
 %%% @copyright (C) 2019, <COMPANY>
 %%% @doc Records to use across "trip" app modules
 %%%
+%%% LatLong Ref: https://journeynorth.org/tm/LongitudeIntro.html
+%%%
 %%% @end
 %%% Created : 13. Dec 2019 6:34 AM
 %%%-------------------------------------------------------------------
@@ -29,7 +31,10 @@
 -record(trip_point, {
   id = 0,
   trip_id = #trip.id,
-  dt = {{2019, 12, 13}, {6, 42, 0}},
-  long = 0.0,
-  lat = 0.0
+  % REVIEW: not sure if this needs to be decoded
+  dt = <<"2019-12-22T05:17:01.949746-08:00">>,
+  % across - equator is 0
+  lat = 0.0,
+  % up + down - prime meridian is 0
+  long = 0.0
 }).

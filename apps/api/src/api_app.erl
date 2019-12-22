@@ -14,7 +14,8 @@ start(_StartType, _StartArgs) ->
         {'_', [
             {"/", toppage_h, []},
             {"/user/[:user_id]", user_h, []},
-            {"/table/[:table]", api_h, []}
+            {"/table/[:table]", api_h, []},
+            {"/trip_point/[:trip_id]", trip_point_h, []}
             ]}
     ]),
     {ok, _} = cowboy:start_clear(http, [{port, 8080}], #{
