@@ -12,8 +12,7 @@
 -compile(export_all).
 -compile(nowarn_export_all).
 
-all() ->
-  [mod_exists].
+all() -> ct_helper:all(?MODULE).
 
 mod_exists(_) ->
   {module, trip} = code:load_file(trip).

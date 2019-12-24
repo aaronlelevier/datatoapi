@@ -15,7 +15,7 @@
 
 -spec create({
   Id::integer(), TripId::integer(), Long::float(), Lat::float()}) -> trip.
-create({Id, TripId, Long, Lat}) ->
+create({Id, TripId, Lat, Long}) ->
   Dt = trip_util:now_datetime(),
   #trip_point{
     id = Id,

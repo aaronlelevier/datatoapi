@@ -2,9 +2,9 @@
 -include_lib("eunit/include/eunit.hrl").
 
 create_test() ->
-  {Id, TripId, Long, Lat} = {1, 2, 3.0, 4.0},
+  {Id, TripId, Lat, Long} = {1, 2, 3.0, 4.0},
 
-  Tp = trip_point:create({Id, TripId, Long, Lat}),
+  Tp = trip_point:create({Id, TripId, Lat, Long}),
 
-  {trip_point, Id, TripId, Dt, Long, Lat} = Tp,
-  true = is_tuple(Dt).
+  {trip_point, Id, TripId, Dt, Lat, Long} = Tp,
+  ?assertEqual(true, is_tuple(Dt)).
